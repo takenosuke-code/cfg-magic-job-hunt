@@ -1,0 +1,9 @@
+{
+  "max_posts_per_run": 20,
+  "sources": {
+    "simplify": {
+      "terms": ["Summer 2027"],
+      "categories": ["Software", "Software Engineering"]
+    }
+  }
+}
