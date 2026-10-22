@@ -9,6 +9,7 @@ import csv
 import io
 import json
 import time
+import urllib.error
 import urllib.request
 
 from jobbot.links import clean_url
@@ -64,7 +65,17 @@ def google_sheet(config: dict) -> list:
     """
     if not config.get("csv_url"):
         return []
-    rows = csv.DictReader(io.StringIO(_get(config["csv_url"]).decode("utf-8-sig")))
+    try:
+        text = _get(config["csv_url"]).decode("utf-8-sig")
+    except urllib.error.URLError as e:
+        # Don't let a sheet problem stop the Simplify listings from posting.
+        print(f"Couldn't read Google Sheet: {e}")
+        return []
+    if text.lstrip().lower().startswith("<"):
+        # Google returns a sign-in page instead of CSV when the sheet isn't shared.
+        print("Google Sheet isn't readable: set sharing to 'Anyone with the link can view'")
+        return []
+    rows = csv.DictReader(io.StringIO(text))
     now = time.time()
     jobs = []
     for i, row in enumerate(rows):

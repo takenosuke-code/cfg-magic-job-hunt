@@ -18,6 +18,10 @@ class GoogleSheetTest(unittest.TestCase):
         self.assertEqual(jobs[0]["id"], "sheet:https://careers.netapp.com/job/1")
         self.assertEqual(jobs[0]["locations"], ["Wichita"])
 
+    def test_unshared_sheet_returns_nothing(self):
+        with mock.patch.object(sources, "_get", return_value=b"<!DOCTYPE html><html>sign in</html>"):
+            self.assertEqual(sources.google_sheet({"csv_url": "https://example.com"}), [])
+
     def test_disabled_without_url(self):
         self.assertEqual(sources.google_sheet({"csv_url": ""}), [])
 
