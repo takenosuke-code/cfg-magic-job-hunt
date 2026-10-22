@@ -35,10 +35,17 @@ def collect(dry_run: bool) -> None:
     for name, source_config in config["sources"].items():
         jobs.extend(SOURCES[name](source_config))
 
-    new_jobs = [j for j in jobs if j["id"] not in seen]
-    new_jobs.sort(key=lambda j: j["posted_at"])
-    for job in new_jobs:
+    # Links are tracked as well as IDs, so a job that shows up in two sources
+    # (e.g. Simplify and the Muse sheet) is only posted once.
+    new_jobs = []
+    for job in sorted(jobs, key=lambda j: j["posted_at"]):
         job["url"] = clean_url(job["url"])
+        url_key = f"url:{job['url']}"
+        already_seen = job["id"] in seen or url_key in seen
+        seen.add(url_key)
+        if already_seen:
+            continue
+        new_jobs.append(job)
 
     # Everything new is marked seen, even past the cap, so a burst of new
     # listings is posted once (capped) rather than dribbled out over hours.

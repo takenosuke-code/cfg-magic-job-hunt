@@ -4,6 +4,9 @@
     "simplify": {
       "terms": ["Summer 2027"],
       "categories": ["Software", "Software Engineering"]
+    },
+    "google_sheet": {
+      "csv_url": ""
     }
   }
 }

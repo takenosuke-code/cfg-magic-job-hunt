@@ -26,10 +26,18 @@ python -m jobbot.main collect --dry-run   # prints what would be posted, saves n
 
 No dependencies beyond the Python 3 standard library.
 
+## Google Sheet source (Muse / manual links)
+
+Anything added to a Google Sheet gets posted too. This is how Muse shares what it finds on zero2sudo.
+
+1. Make a sheet whose first row is `company | title | url | location` (only `url` is required).
+2. **Share → General access → Anyone with the link → Viewer.**
+3. Put `https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=csv` in `config.json` under `google_sheet.csv_url`.
+
+Append new rows at the bottom. Links are compared after stripping tracking params, so a job already posted from Simplify won't be posted again from the sheet.
+
 ## Adding sources
 
 Write a function in `jobbot/sources.py` that returns job dicts (`id`, `company`, `title`, `url`, `locations`, `posted_at`, `source`), register it in `SOURCES`, and add it to `config.json`. Ideas:
 
-- zero2sudo directly
 - New-grad lists
-- Sharing what members apply to (e.g. a Muse export)
