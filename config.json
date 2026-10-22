@@ -1,5 +1,5 @@
 {
-  "max_posts_per_run": 20,
+  "max_posts_per_run": 10,
   "sources": {
     "simplify": {
       "terms": ["Summer 2027"],
