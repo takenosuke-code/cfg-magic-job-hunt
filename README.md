@@ -7,7 +7,7 @@ Automatically posts new SWE internship listings into a Slack channel (e.g. `#swe
 1. A GitHub Action runs every 30 minutes (`.github/workflows/post-jobs.yml`).
 2. `jobbot` pulls listings from each source in `config.json`. Right now that's the [SimplifyJobs Summer 2027 internship list](https://github.com/SimplifyJobs/Summer2027-Internships), filtered to Software / Software Engineering roles. It's the same pool zero2sudo reposts from.
 3. Tracking parameters (`fbclid`, `utm_*`, `ref`, ...) are stripped from links.
-4. Anything not already in `state/seen.json` is posted to Slack (max 20 per run), and the Action commits the updated `state/seen.json`.
+4. Anything not already in `state/seen.json` is queued (max 10 per run, so a quiet run might post 0 to 3). The Action commits the updated `state/seen.json` first, then posts, so a failed save means nothing is posted and a listing is never posted twice.
 
 The very first run only records existing postings and posts nothing, so the channel isn't flooded with hundreds of old links.
 
@@ -21,7 +21,7 @@ The very first run only records existing postings and posts nothing, so the chan
 
 ```sh
 python -m unittest discover tests
-python -m jobbot.main --dry-run      # prints instead of posting, doesn't save state
+python -m jobbot.main collect --dry-run   # prints what would be posted, saves nothing
 ```
 
 No dependencies beyond the Python 3 standard library.
