@@ -2,7 +2,8 @@ name: Post new jobs to Slack
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # Off the top of the hour: GitHub delays or drops scheduled runs at busy times.
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:

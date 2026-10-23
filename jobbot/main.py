@@ -38,28 +38,42 @@ def collect(dry_run: bool) -> None:
     # Links are tracked as well as IDs, so a job that shows up in two sources
     # (e.g. Simplify and the Muse sheet) is only posted once.
     new_jobs = []
+    new_urls = set()
     for job in sorted(jobs, key=lambda j: j["posted_at"]):
         job["url"] = clean_url(job["url"])
         url_key = f"url:{job['url']}"
-        already_seen = job["id"] in seen or url_key in seen
-        seen.add(url_key)
-        if already_seen:
+        if job["id"] in seen or url_key in seen:
+            seen.add(url_key)
             continue
+        if url_key in new_urls:
+            continue
+        new_urls.add(url_key)
         new_jobs.append(job)
 
-    # Everything new is marked seen, even past the cap, so a burst of new
-    # listings is posted once (capped) rather than dribbled out over hours.
-    to_post = [] if first_run else new_jobs[-config.get("max_posts_per_run", 10) :]
-    print(f"{len(jobs)} listings, {len(new_jobs)} new, queued {len(to_post)}"
-          + (" (first run: seeding only)" if first_run else ""))
+    cap = config.get("max_posts_per_run", 10)
+    flood_limit = config.get("flood_limit", 60)
+    if first_run or len(new_jobs) > flood_limit:
+        # A first run, or a source reshuffling its IDs, makes everything look
+        # new. Record it all without posting rather than flooding the channel.
+        to_post, done = [], new_jobs
+        reason = "first run" if first_run else f"over flood_limit of {flood_limit}"
+        print(f"{len(new_jobs)} new ({reason}): marking seen without posting")
+    else:
+        # Oldest first; anything past the cap stays unseen and posts next run.
+        to_post = done = new_jobs[:cap]
+    print(f"{len(jobs)} listings, {len(new_jobs)} new, queued {len(to_post)}, "
+          f"{len(new_jobs) - len(done)} carried over to next run")
 
     if dry_run:
         for job in to_post:
             print(f"- {job['company']}: {job['title']} {job['url']}")
         return
 
+    for job in done:
+        seen.add(job["id"])
+        seen.add(f"url:{job['url']}")
     SEEN_PATH.parent.mkdir(exist_ok=True)
-    SEEN_PATH.write_text(json.dumps(sorted(seen | {j["id"] for j in new_jobs}), indent=0))
+    SEEN_PATH.write_text(json.dumps(sorted(seen), indent=0))
     PENDING_PATH.write_text(json.dumps(to_post))
 
 
